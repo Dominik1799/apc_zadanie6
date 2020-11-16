@@ -100,7 +100,7 @@ bool comp(std::shared_ptr<Node> const& n1, std::shared_ptr<Node> const& n2){
     return n1->value < n2->value;
 }
 
-
+// Ma to byt prazdne ak subor ma len jeden char? na SO pisali ze hej
 int main(int argc, char* argv[]) {
     if (argc != 2)
         return 1;

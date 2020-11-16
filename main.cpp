@@ -5,15 +5,16 @@
 #include <memory>
 #include <queue>
 #include <algorithm>
+#include <math.h>
 
 struct Node {
-    unsigned char value;
-    unsigned long long frequency;
+    unsigned char value{};
+    unsigned long long frequency{};
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
     std::string code;
 };
-struct CompareNodes {
+struct CompareNodeFrequency {
     bool operator()(std::shared_ptr<Node> const& n1, std::shared_ptr<Node> const& n2){
         return n1->frequency > n2->frequency;
     }
@@ -21,7 +22,7 @@ struct CompareNodes {
 
 struct MainBuffer {
     unsigned long long bytes[256];
-    std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, CompareNodes> minHeap;
+    std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, CompareNodeFrequency> minHeap;
     std::vector<std::shared_ptr<Node>> results;
     std::shared_ptr<Node> huffmanRoot;
 };
@@ -32,11 +33,17 @@ void parseBytes(MainBuffer& buffer, const std::string& file){
     }
     std::ifstream source(file,std::ios_base::binary);
     int byte;
+    bool isFileEmpty = true;
     while (source){
         byte = source.get();
         if (byte < 0) // EOF
             break;
+        isFileEmpty = false;
         buffer.bytes[byte]++;
+    }
+    if (isFileEmpty){
+        std::cerr << "Empty file";
+        exit(1);
     }
     for (size_t i = 0; i < 256; ++i) {
         if (buffer.bytes[i] > 0){
@@ -89,7 +96,9 @@ void parseHuffmanTree(std::vector<std::shared_ptr<Node>> &results,std::shared_pt
     }
 }
 
-bool comp(std::shared_ptr<Node> const& n1, std::shared_ptr<Node> const& n2){}
+bool comp(std::shared_ptr<Node> const& n1, std::shared_ptr<Node> const& n2){
+    return n1->value < n2->value;
+}
 
 
 int main(int argc, char* argv[]) {
@@ -100,9 +109,12 @@ int main(int argc, char* argv[]) {
     parseBytes(buffer, argv[1]);
     buildHuffmanTree(buffer);
     parseHuffmanTree(buffer.results, buffer.huffmanRoot,"");
-    for (auto o : buffer.results){
-        std::cout << o->value << " " << o->code << "\n";
+    std::sort(buffer.results.begin(),buffer.results.end(),comp);
+    double check = 0;
+    for (const auto& o : buffer.results){
+        std::cout << (int)o->value << ": " << o->code << "\n";
+        check += 1.0 / std::pow(2,o->code.length());
     }
-    std::cout << buffer.huffmanRoot->frequency;
+    std::cout << check;
     return 0;
 }
